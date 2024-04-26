@@ -78,4 +78,4 @@ The WiFi Network object contains essential information for network access at a c
 |                                                | Information Retrieval APis |
 | [Obtain Customer ID from AccountIDd](ObtainCustomerId.md)            | |
 | [Obtain Customer ID and LocationID from Serial Number](ObtainIDFromSerial.md) | |
-| Update Plume Customer AccountID                | |
+| [Update Plume Customer AccountID](UpdatePlumeCustomer.md)                | |
