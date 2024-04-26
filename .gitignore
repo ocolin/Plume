@@ -1,0 +1,6 @@
+.*
+!/.gitignore
+!/.env.example
+vendor
+test.php
+PLAY

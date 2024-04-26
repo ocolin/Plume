@@ -1,0 +1,34 @@
+{
+    "name": "ocolin/plumeapi",
+    "description": "API for communicating with Plume cloud",
+    "type": "library",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/ocolin/EasyEnv"
+        }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "^7.8",
+        "monolog/monolog": "^3.6",
+        "ocolin/easyenv": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.1",
+        "phpstan/phpstan": "^1.10"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Cruzio\\lib\\Plume\\": "src/",
+            "Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Colin Miller",
+            "email": "ocolin@cruzio.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}
