@@ -64,18 +64,18 @@ The WiFi Network object contains essential information for network access at a c
 
 ## List of available APIs
 
-| Link                                           | Description |
-|------------------------------------------------| ----------- |
-|                                                | Onboarding and Provisioning |
-| [Customer Provisioning](CustomerProvisioning.md)                    | 	To start, a unique customer must be registered with the Plume Cloud. Basic information such as their Name, Email, and password must be registered and verified. This can be done via a RESTful API call to the Plume Cloud with an authentication token. |
-| [Set the ServiceId for the Customer’s Location](SetServiceId.md)  | 	A customer account may have multiple locations, each location may have a custom serviceID to track multiple service contracts a single customer may have. This is an optional step if the ISP supports multiple locations and would like to mark the location with an ISP known value to distinguish the location (ServiceId is a free text string).|
+| Link                                          | Description |
+|-----------------------------------------------| ----------- |
+|                                               | Onboarding and Provisioning |
+| [Customer Provisioning](CustomerProvisioning.md)                   | 	To start, a unique customer must be registered with the Plume Cloud. Basic information such as their Name, Email, and password must be registered and verified. This can be done via a RESTful API call to the Plume Cloud with an authentication token. |
+| [Set the ServiceId for the Customer’s Location](SetServiceId.md) | 	A customer account may have multiple locations, each location may have a custom serviceID to track multiple service contracts a single customer may have. This is an optional step if the ISP supports multiple locations and would like to mark the location with an ISP known value to distinguish the location (ServiceId is a free text string).|
 | [Provisioning Nodes ](ProvisioningNodes.md) |	After creating the Wifi Network, the next step is to claim the Gateway, which may be an ISP Gateway or a Plume pod. A technician may use this API call on a service portal. |
 | [Completing Onboarding](CompletingOnboarding.md) | Completing the onboarding will trigger an email to the customer and a timestamp when this process is completed. This step occurs automatically during the final stage of onboarding using the Plume Mobile App. A technician may alternatively complete this action on behalf of the customer using this API from a service portal. |
-|                                                | Offboarding and Deprovisioning |
+|                                               | Offboarding and Deprovisioning |
 | [Service Cancelation](ServiceCancellation.md) | Process for service cancellation or an RMA. Use cases cover the API calls needed to terminate the service, suspend the account, or unclaim an Extender for RMA purposes. |
 | [Unclaim nodes](UnclaimNodes.md)     | To get a node ready to be sent in for replacement via RMA, it must be unclaimed from the customer account and location. This step occurs when the customer removes a node from the Plume Mobile App or support removes it using Frontline. A technician may alternatively complete this action on behalf of the customer using this API from a service portal. |
 | [Email Verification](EmailVerification.md)	 | The customer’s email must be verified before the customer can log into the mobile app. The email may be verified by an external system or via the Plume Cloud directly.|
-|                                                | Information Retrieval APis |
-| [Obtain Customer ID from AccountIDd](ObtainCustomerId.md)            | |
+|                                               | Information Retrieval APis |
+| [Obtain Customer ID from AccountIDd](ObtainCustomerId.md)           | |
 | [Obtain Customer ID and LocationID from Serial Number](ObtainIDFromSerial.md) | |
-| Update Plume Customer AccountID                | |
+| [Update Plume Customer AccountID](UpdatePlumeCustomer.md)               | |
