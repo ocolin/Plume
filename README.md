@@ -103,7 +103,7 @@ Get an object from the server.
 
 ```
 $output = $plume->get(
-    path: '/customers/{id}',
+     path: '/customers/{id}',
     query: [ 'id' => 'XZY' ]
 );
 
@@ -137,7 +137,8 @@ $output = $plume->post(
     body: [
         'accountId' => '12345',
             'email' => 'devnull@test.com',
-             'name' => 'Test Account'
+             'name' => 'Test Account',
+        'partnerId' => ''
     ]
 );
 
@@ -167,9 +168,9 @@ Used to update an existing object.
 
 ```
 $output = $plume->patch(
-    path: '/customers/{id}'
+     path: '/customers/{id}'
     query: [ 'id' => 'XYZ' ],
-    body: [ 'name' => 'New Name' ]
+     body: [ 'name' => 'New Name' ],
 );
 ```
 
@@ -183,7 +184,7 @@ Remove an object from the server.
 
 ```
 $output = $plume->delete(
-    path: '/customers/{id}'
+     path: '/customers/{id}'
     query: [ 'id' => 'XYZ' ],
 );
 
