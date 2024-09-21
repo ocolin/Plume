@@ -129,7 +129,7 @@ stdClass Object
 
 ### Post
 
-Create a new object on server
+Create a new object on server. Notice PartnerId param is empty.
 
 ```
 $output = $plume->post(
