@@ -1,12 +1,6 @@
 {
     "name": "ocolin/plume",
     "description": "PHP Plume API Client",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/ocolin/EasyEnv"
-        }
-    ],
     "require": {
         "guzzlehttp/guzzle": "^7.9",
         "ocolin/easyenv": "^1.0"
