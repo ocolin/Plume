@@ -33,8 +33,6 @@ class testPlume extends TestCase
         $this->assertObjectHasProperty( propertyName: 'id', object: $response );
         $this->assertEquals( expected: '777777', actual: $response->accountId );
 
-        print_r( $response );
-
         return $response->id;
     }
 

@@ -6,7 +6,7 @@ namespace Ocolin\Plume;
 
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
-use Ocolin\Env\EasyEnv;
+use Ocolin\EasyEnv\LoadEnv;
 
 class Plume
 {
@@ -79,7 +79,7 @@ class Plume
     )
     {
         if( $local === true ) {
-            EasyEnv::loadEnv( path: __DIR__ . '/../.env', append: true );
+            new LoadEnv( files: __DIR__ . '/../.env', append: true );
         }
 
         $this->api_url    = $api_url    ?? $_ENV['PLUME_API_URL'];
