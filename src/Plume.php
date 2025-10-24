@@ -105,10 +105,10 @@ class Plume
     /**
      * @param string $path
      * @param string $method
-     * @param array<string, string> $query
+     * @param array<string, string|int|float> $query
      * @param array<string, mixed>|object $body
      * @return Response
-     * @throws GuzzleException
+     * @throws GuzzleException:
      */
     public function call(
               string $path,
