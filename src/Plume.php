@@ -56,7 +56,7 @@ class Plume
      */
     public array|object $body = [];
 
-/*
+/* CONSTRUCTOR
 ----------------------------------------------------------------------------- */
 
     /**
@@ -99,15 +99,15 @@ class Plume
 
 
 
-/*
+/* MAKE API CALL
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path
-     * @param string $method
-     * @param array<string, string|int|float> $query
-     * @param array<string, mixed>|object $body
-     * @return Response
+     * @param string $path API endpoint path.
+     * @param string $method HTTP method for API endpoint.
+     * @param array<string, string|int|float|bool> $query Parameters in URI.
+     * @param array<string, mixed>|object $body Parameters in body.
+     * @return Response API response object.
      * @throws GuzzleException:
      */
     public function call(
@@ -133,13 +133,13 @@ class Plume
     }
 
 
-/* GET
+/* GET CALL
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path
-     * @param array<string, string> $query
-     * @return object
+     * @param string $path API endpoint path.
+     * @param array<string, string> $query URI variables.
+     * @return object Response object.
      * @throws GuzzleException
      */
     public function get(
@@ -154,14 +154,14 @@ class Plume
 
 
 
-/* POST
+/* POST CALL
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path
-     * @param array<string, string> $query
-     * @param array<string, mixed>|object $body
-     * @return object
+     * @param string $path API endpoint path.
+     * @param array<string, string> $query URI parameters.
+     * @param array<string, mixed>|object $body Body parameters.
+     * @return object Response object.
      * @throws GuzzleException
      */
     public function post(
@@ -178,14 +178,14 @@ class Plume
     }
 
 
-/* PATCH
+/* PATCH CALL
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path
-     * @param array<string, string> $query
-     * @param array<string, mixed>|object $body
-     * @return object
+     * @param string $path URI endpoint path.
+     * @param array<string, string> $query URI parameters.
+     * @param array<string, mixed>|object $body Body parameters.
+     * @return object Response object.
      * @throws GuzzleException
      */
     public function patch(
@@ -204,14 +204,14 @@ class Plume
 
 
 
-/* PUT
+/* PUT CALL
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path
-     * @param array<string, string> $query
-     * @param array<string, mixed>|object $body
-     * @return object
+     * @param string $path API endpoint path.
+     * @param array<string, string> $query URI parameters.
+     * @param array<string, mixed>|object $body Body parameters.
+     * @return object Response object.
      * @throws GuzzleException
      */
     public function put(
@@ -230,13 +230,13 @@ class Plume
 
 
 
-/* DELETE
+/* DELETE CALL
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path
-     * @param array<string, string> $query
-     * @return object
+     * @param string $path API endpoint path.
+     * @param array<string, string> $query URI parameters.
+     * @return object Response object.
      * @throws GuzzleException
      */
     public function delete( string $path, array $query = [] ) : object
@@ -249,12 +249,12 @@ class Plume
     }
 
 
-/* HEAD
+/* HEAD CALL
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path
-     * @return object
+     * @param string $path API endpoint path.
+     * @return object Response object.
      * @throws GuzzleException
      */
     public function head( string $path ) : object
@@ -266,9 +266,13 @@ class Plume
 
 
 
-/*
+/* INSERT PATH PARAMETERS
 ----------------------------------------------------------------------------- */
 
+    /**
+     * Replace parameters in URI with variables.
+     * @return void
+     */
     private function insert_Path_Params() : void
     {
         if( !str_contains( haystack: $this->path, needle: '{' )) {
@@ -301,9 +305,13 @@ class Plume
     }
 
 
-/*
+/* INSERT BODY PARAMETERS
 ----------------------------------------------------------------------------- */
 
+    /**
+     * Replace body parameters with variables.
+     * @return void
+     */
     private function insert_Body_Params() : void
     {
         if( is_array( $this->body )) {

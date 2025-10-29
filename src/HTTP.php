@@ -48,15 +48,15 @@ class HTTP
      */
     public array $headers;
 
-/*
+/* CONSTRUCTOR
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string|null $api_url
-     * @param string|null $auth_url
-     * @param string|null $partner_id
-     * @param string|null $group_id
-     * @param string|null $auth_hash
+     * @param string|null $api_url URL endpoint of API.
+     * @param string|null $auth_url URL of authentication endpoint.
+     * @param string|null $partner_id API account Partner ID.
+     * @param string|null $group_id API account Group ID.
+     * @param string|null $auth_hash Authentication hash.
      * @throws Exception
      * @throws GuzzleException
      */
@@ -90,15 +90,16 @@ class HTTP
     }
 
 
+
 /* CALL API
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path
-     * @param string $method
-     * @param array<string, string> $query
-     * @param array<string, mixed>|object $body
-     * @return Response
+     * @param string $path API endpoint URI path.
+     * @param string $method HTTP method to use.
+     * @param array<string, string> $query URI parameters.
+     * @param array<string, mixed>|object $body Body parameters.
+     * @return Response Response object.
      * @throws GuzzleException
      */
     public function call(
@@ -159,14 +160,14 @@ class HTTP
 
 
 
-/*
+/* API READ REQUEST
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path
-     * @param string $method
-     * @param array<string, string> $query
-     * @return ResponseInterface
+     * @param string $path API endpoint pth.
+     * @param string $method HTTP method to use.
+     * @param array<string, string> $query URI parameters.
+     * @return ResponseInterface Response object.
      * @throws GuzzleException
      */
     public function read(
@@ -183,15 +184,16 @@ class HTTP
     }
 
 
-/*
+
+/* API WRITE REQUEST
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path
-     * @param string $method
-     * @param array<string, string> $query
-     * @param array<string, mixed>|object $body
-     * @return ResponseInterface
+     * @param string $path API endpoint path.
+     * @param string $method HTTP method.
+     * @param array<string, string> $query URI parameters.
+     * @param array<string, mixed>|object $body Bpd parameters.
+     * @return ResponseInterface Response object.
      * @throws GuzzleException
      */
     public function write(
@@ -209,8 +211,6 @@ class HTTP
             options: [ 'query' => $query, 'body'  => $body ]
         );
     }
-
-
 
 
 
@@ -293,6 +293,10 @@ class HTTP
 /* STORE AUTH TOKEN IN CACHE FILE
 ----------------------------------------------------------------------------- */
 
+    /**
+     * @param string|false $token Authentication token to store.
+     * @return void
+     */
     public static function write_Token_To_File( string|false $token ) : void
     {
         file_put_contents( filename: __DIR__ . '/.token.cache', data: $token );
