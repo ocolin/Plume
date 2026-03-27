@@ -1,198 +1,279 @@
 # Plume
 
-A simple PHP client for accessing a Plume API server. It will cache your auth credentials so as to only request them when they expire and not on every API call. When initializing the client, it will check the status of it's auth credentials, and then request new ones only if needed. 
+## Table of Contents
 
-## Environment Variables
+- [What is Plume?](#what-is-plume)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+    - [Environment Variables](#instantiating-with-environment-variables)
+    - [Constructor Arguments](#instantiating-with-constructor-arguments)
+    - [Additional Configuration](#additional-configuration)
+- [Interpolation Concepts](#interpolation-concepts)
+    - [Endpoint Variables](#endpoint-variables)
+    - [HTTP Body Variables](#http-body-variables)
+- [Response](#response)
+- [Usage](#usage)
+    - [GET](#get)
+    - [POST](#post)
+    - [PUT](#put)
+    - [PATCH](#patch)
+    - [DELETE](#delete)
+    - [HEAD](#head)
+    - [REQUEST](#request)
+- [TODO](#todo)
 
-### Ways to set varaibles
+## What is Plume?
 
-There are 3 ways to provide the client with the server variables.
+This plugin is a lightweight PHP API client for Plume cloud services. 
 
-1. Feed them manually into constructor from calling library.
-2. Use environment variables that are initialized in the calling library.
-3. Use local environment variables stored in a .env file in the root of this library.
+Plume hosts a cloud based service for provisioning and managing home and office wifi networks. Plume provides an API to their cloud services that allow partners to manage their customers's wifi and networking needs remotely. 
 
-The constructor has a boolean flag called "local." If set to true, envrionment variables will be loaded from a .env file in the root directory.
+This client was designed so that API calls can be quickly and easily be implemented into your tools for managing Plume services.
 
-### Environment variable names
+### Plume website
 
-- PLUME_AUTH_URL - URL of Plume authentication server.
-- PLUME_API_URL - URL of Plume cloud server.
-- PLUME_AUTH_HASH - Hash used by auth server.
-- PLUME_AUTH_SCOPE - Auth server scope.
-- PLUME_PARTNER_ID - Your Plume partner ID.
-- PLUME_GROUP_ID - Your Plume group ID.
+https://www.plume.com/platform/home
 
-### Sample
+### Plume API explorer
 
-See example .env file at /.env.example
+Requires partner login:
 
-## Initializing Plume client
+https://gamma.noc.plume.com/explorer
 
-### Environment pre-set by calling library
+### Ocolin/Plume github
+
+https://github.com/ocolin/Plume
+
+---
+## Requirements
+
+- PHP >= 8.2
+- psr/http-message ^1.0|^2.0
+- guzzlehttp/guzzle ^7.10
+- ocolin/global-type ^2.0
+
+---
+## Installation
 
 ```
-$plume = new Ocolun\Plume\Plume();
+composer require ocolin/plume
+```
+---
+## Configuration
+
+There are two ways to configure the Plume client. One is using environment variables and the other is using the constructor.
+
+### Instantiating with environment variables
+
+The following environment variables are used:
+
+|Name| Description                               |
+|----|-------------------------------------------|
+|PLUME_AUTH_URL| Url to Plume's authentication service.    |
+|PLUME_AUTH_HASH| Partner token for authentication service. |
+|PLUME_PARTNER_ID| Your assigned Plume Partner ID            |
+|PLUME_GROUP_ID| Your assigned Plume Group ID              |
+|PLUME_API_URL| URL to the Plume cloud API server         |
+
+There is an [.env.example](.env.example) file included to use as a template for your projects.
+
+#### Example:
+
+```php
+// Setting manually for demonstration
+$_ENV['PLUME_AUTH_URL']   = 'https://url.to.authserver.test';
+$_ENV['PLUME_AUTH_HASH']  = 'MyAuthenticationTokenHashHere';
+$_ENV['PLUME_PARTNER_ID'] = 'myPartnerIdHere';
+$_ENV['PLUME_GROUP_ID']   = 'myGroupIdHere';
+$_ENV['PLUME_API_URL']    = 'https://url.to.apiserver.test';
+$plume = new Ocolin\Plume\Plume();
 ```
 
-### Environment vars in local .env file
+### Instantiating With Constructor Arguments
 
-```
-$plume = new Ocolun\Plume\Plume( local: true );
+If you don't use environment variables, you can specify your credentials in the constructor through the use of a Config class.
+
+#### Example:
+
+```php
+$config = new Ocolin\Plume\Config(
+       api_url: 'https://url.to.authserver.test',
+      auth_url: 'https://url.to.apiserver.test',
+     auth_hash: 'MyAuthenticationTokenHashHere',
+    partner_id: 'myPartnerIdHere',
+      group_id: 'myGroupIdHere'
+);
+
+$plume = new Ocolin\Plume\Plume( config: $config );
 ```
 
-### Manually supplying server variables
+### Additional configuration.
 
+In addition to the Config class, there are a few other options for configuration.
+
+- $options - Guzzle HTTP options. Good place to set timeouts, disable SSL verification, etc.
+- $throwOnError - This sets Plume to throw an error when recieving an error status from the Plume cloud. This is off by default.
+
+
+#### Example
+
+```php
+$plume = new Ocolin\Plume\Plume(
+    options: [ 'timeout' => 30, 'verify' => false ]
+    throwOnError: true
+);
 ```
-$plume = new Ocolun\Plume\Plume( 
-       api_url: 'https://piranha-gamma.prod.us-west-2.aws.plumenet.io/api/',
-      auth_url: 'https://external.sso.plume.com/oauth2/XYZ/v1/token',
-    partner_id: 'XYZ',
-      group_id: 'XYZ',
-     auth_hash: 'XYZ'
+---
+## Response
+
+All methods return an `Ocolin\Plume\Response` object with the following properties:
+
+| Property       | Type   | Description                        |
+|----------------|--------|------------------------------------|
+| status         | int    | HTTP status code                   |
+| status_message | string | HTTP status message                |
+| headers        | array  | HTTP response headers              |
+| body           | mixed  | Decoded JSON response body         |
+
+### Example
+```php
+$plume    = new Ocolin\Plume\Plume();
+$response = $plume->get(
+    endpoint: '/customers/{id}',
+       query: [ 'id' => 'theClientsId' ]
+);
+
+echo $response->status;          // 200
+echo $response->status_message;  // OK
+echo $response->body->name;      // Customer name
+```
+---
+## Interpolation Concepts
+
+Some variables in the Plume client can be automatically replaced. Here are some examples.
+
+### Endpoint variables
+
+Many of the plume endpoints have variables in them, such as ```/customer/{id}```. These can be replaced automatically by any values in the query argument where the element key matches the variable in the endpoint.
+
+Additionally, and groupId or partnerId variables in an endpoint will be automatically replaced with your config settings unless you opt to set them yourself. This saved you from having to populate those settings on endpoints that use them.
+
+### HTTP Body variables
+
+Inside your body data, the groupId and partnerID values can be auto populated if you include them as blank properties in your body.
+
+```php
+Example:
+$body = [ 'groupId' => '', 'partnerId' => '' ];
+```
+---
+## Usage
+
+The Plume client comes with a function for each HTTP request method as well as a request function that let's you specify an HTTP method. 
+
+Argument descriptions:
+
+| name     | Description                                            | type          | default |
+|----------|--------------------------------------------------------|---------------|---------|
+| endpoint | The API endpoint found in Plume API Explorer.          | string        | None    |
+| method   | HTTP method to use.                                    | string        | GET     |
+| query    | HTTP query parameters and path parameters              | array\|object | []      |
+| body     | HTTP body. JSON or www-form                            | array\|object|[]|
+| formData | Use www-form instead of JSON. Needed by some endpoints | boolean       | false   |
+
+
+### GET
+
+```php
+$plume  = new Ocolin\Plume\Plume();
+$plume->get(
+    endpoint: '/customers/{id}',
+      query: [ 'id' => 'theClientsId' ] 
 );
 ```
 
-## Making API calls
+### POST
 
-### Arguments
-
-#### Path
-
-This is the URI path used when making an HTTP call to the server.
-
-#### Query
-
-These are parameters that are either in the query part of the URI, or variables {variable} in the URI path. And variables in the URI path surrounded by curly braces will be replaced by any raviable with the same name in the query array.
-
-#### Body
-
-This part gets sent as the HTTP request body. Only used for calls that write data to the server. It can be formatted as an array or query. It will eventually be encoded into a JSON string before sending to server.
-
-#### Auto-fill
-
-Anywhere the partnerId or GroupId are used, whether in the path, query, or body, they will be automatically filled in using the credentials provided when initializing the client. 
-
-No variable is needed for either of these in the path. However if either of them is needed in the HTTP body being sent to server, you will need to add the variable as an element without a value. This is the only way for the client to know if such a field should exist in the body.
-
-### Call
-
-This is a generic function that let's you build any type of call. It also returns not just the body of the server output, but also header information as well.
-
-```
-$output = $plume->call(
-      path: '/customers/{id}',
-    method: 'GET',
-     query: [ 'id' => 'XZY' ]
-);
-
-/** OUTPUT
-stdClass Object
-(
-    [status] => 200
-    [status_message] => OK
-    [headers] => [...]
-    [body] => stdClass Object( ... )
-)
-*/
-```
-
-### Get
-
-Get an object from the server.
-
-```
-$output = $plume->get(
-     path: '/customers/{id}',
-    query: [ 'id' => 'XZY' ]
-);
-
-/** OUTPUT
-stdClass Object
-(
-    [id] => 66ef34687f1c07000b200925
-    [accountId] => 12345
-    [anonymous] => 
-    [autoProvisioned] => 
-    [name] => Test Account
-    [locked] => 
-    [partnerId] => XYZ
-    [acceptLanguage] => en-US
-    [source] => Customer.registerWithGroups
-    [createdAt] => 2024-09-21T21:02:32.777Z
-    [provisioningSsoAuditTrail] => 
-    [email] => devnull@test.com
-    [locationId] => XYZ
-)
-*/
-```
-
-### Post
-
-Create a new object on server. Notice PartnerId param is empty.
-
-```
-$output = $plume->post(
-    path: '/Customers/registerWithGroups',
-    body: [
-        'accountId' => '12345',
-            'email' => 'devnull@test.com',
-             'name' => 'Test Account',
-        'partnerId' => ''
-    ]
-);
-
-/** OUTPUT
-stdClass Object
-(
-    [id] => 66ef34687f1c07000b200925
-    [accountId] => 12345
-    [anonymous] => 
-    [autoProvisioned] => 
-    [name] => Test Account
-    [locked] => 
-    [partnerId] => XYZ
-    [acceptLanguage] => en-US
-    [source] => Customer.registerWithGroups
-    [createdAt] => 2024-09-21T21:02:32.777Z
-    [provisioningSsoAuditTrail] => 
-    [email] => devnull@test.com
-    [locationId] => XYZ
-)
-*/
-```
-
-### Patch
-
-Used to update an existing object.
-
-```
-$output = $plume->patch(
-     path: '/customers/{id}'
-    query: [ 'id' => 'XYZ' ],
-     body: [ 'name' => 'New Name' ],
+```php
+$plume  = new Ocolin\Plume\Plume();
+$plume->post(
+    endpoint: '/customers/',
+        body: [ 
+        'name' => 'My Name',
+        'accountId' => 'Account Id' 
+    ] 
 );
 ```
 
-### Put
+### PUT
 
-Functions identical to Patch for most calls. 
-
-### Delete
-
-Remove an object from the server.
-
-```
-$output = $plume->delete(
-     path: '/customers/{id}'
-    query: [ 'id' => 'XYZ' ],
+```php
+$plume  = new Ocolin\Plume\Plume();
+$plume->put(
+    endpoint: '/customers/{id}',
+       query: [ 'id' => 'myCustomerId' ],
+        body: [ 
+             'name' => 'My Name',
+        'accountId' => 'Account Id' 
+    ] 
 );
-
-/** OUTPUT
-stdClass Object
-(
-    [count] => 1
-)
-
-*/
 ```
+
+### PATCH
+
+```php
+$plume  = new Ocolin\Plume\Plume();
+$plume->patch(
+    endpoint: '/customers/{id}',
+       query: [ 'id' => 'myCustomerId' ],
+        body: [ 
+             'name' => 'My Name',
+        'accountId' => 'Account Id' 
+    ] 
+);
+```
+
+### DELETE
+
+```php
+$plume  = new Ocolin\Plume\Plume();
+$plume->delete(
+    endpoint: '/Customers/{id}',
+       query: [ 'id' => 'theClientsId' ] 
+);
+```
+
+### HEAD
+
+```php
+$plume  = new Ocolin\Plume\Plume();
+$plume->head(
+    endpoint: '/Customers/{id}/Locations/{locationId}',
+       query: [ 
+            'id'         => 'theClientsId',
+            'locationId' => 'theLocationId'
+        ] 
+);
+```
+
+### REQUEST
+
+General all-purpose API request function.
+
+```php
+$plume  = new Ocolin\Plume\Plume();
+$plume->request(
+    endpoint: '/customers/{id}',
+      method: 'PATCH',
+       query: [ 'id' => 'theClientsId' ],
+        body: [ 
+             'name' => 'My Name',
+        'accountId' => 'Account Id' 
+        ],
+    formData: true
+);
+```
+## TODO
+
+- Some more rigorous unit testing and integration testing can be done.
