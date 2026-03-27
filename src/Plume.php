@@ -4,338 +4,250 @@ declare( strict_types = 1 );
 
 namespace Ocolin\Plume;
 
-use Exception;
 use GuzzleHttp\Exception\GuzzleException;
-use Ocolin\EasyEnv\LoadEnv;
+use Ocolin\Plume\Auth\TokenManager;
+use Ocolin\Plume\Auth\FileTokenCache;
+use Ocolin\Plume\Auth\TokenCacheInterface as TokenCache;
+use Ocolin\Plume\Exception\ApiException;
+use Ocolin\Plume\Exception\AuthException;
 
 class Plume
 {
+    /**
+     * @var HTTP Guzzle HTTP client.
+     */
+    private HTTP $http;
 
     /**
-     * @var string URL used to access Plume API.
+     * @var Config API config data object.
      */
-    public string $api_url;
+    private Config $config;
 
-    /**
-     * @var string URL used for authorization of API.
-     */
-    public string $auth_url;
-
-    /**
-     * @var string Plume API Partner ID.
-     */
-    public string $partner_id;
-
-    /**
-     * @var string Plume API Group ID.
-     */
-    public string $group_id;
-
-    /**
-     * @var string Authentication header hash token.
-     */
-    public string $auth_hash;
-
-    /**
-     * @var HTTP HTTP handler for API calls.
-     */
-    public HTTP $http;
-
-    /**
-     * @var string URI path sent to API server.
-     */
-    public string $path;
-
-    /**
-     * @var array<string, string> Array of parameters in URI.
-     */
-    public array $query = [];
-
-    /**
-     * @var array<string, mixed>|object Body of object being sent.
-     */
-    public array|object $body = [];
 
 /* CONSTRUCTOR
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string|null $api_url
-     * @param string|null $auth_url
-     * @param string|null $partner_id
-     * @param string|null $group_id
-     * @param string|null $auth_hash
-     * @param bool $local
-     * @throws Exception
-     * @throws GuzzleException
+     * @param ?Config $config Configuration data object.
+     * @param array<string, string|int|float|bool> $options Guzzle HTTP options.
+     * @param ?HTTP $http Guzzle HTTP client for mocking.
+     * @param ?TokenCache $cache Token management for mocking.
+     * @param bool $throwOnError Throw a PHP error if API returns an error message.
      */
     public function __construct(
-        ?string $api_url    = null,
-        ?string $auth_url   = null,
-        ?string $partner_id = null,
-        ?string $group_id   = null,
-        ?string $auth_hash  = null,
-           bool $local      = false,
+             ?Config $config  = null,
+               array $options = [],
+               ?HTTP $http    = null,
+         ?TokenCache $cache   = null,
+         bool $throwOnError   = false
     )
     {
-        if( $local === true ) {
-            new LoadEnv( files: __DIR__ . '/../.env', append: true );
-        }
-
-        $this->api_url    = $api_url    ?? $_ENV['PLUME_API_URL'];
-        $this->auth_url   = $auth_url   ?? $_ENV['PLUME_AUTH_URL'];
-        $this->partner_id = $partner_id ?? $_ENV['PLUME_PARTNER_ID'];
-        $this->group_id   = $group_id   ?? $_ENV['PLUME_GROUP_ID'];
-        $this->auth_hash  = $auth_hash  ?? $_ENV['PLUME_AUTH_HASH'];
-
-        $this->http = new HTTP(
-               api_url: $this->api_url,
-              auth_url: $this->auth_url,
-            partner_id: $this->partner_id,
-              group_id: $this->group_id,
-             auth_hash: $this->auth_hash,
+        $this->config = $config ?? new Config();
+        $this->http = $http   ?? new HTTP(
+                  config: $this->config,
+            tokenManager: new TokenManager(
+                config: $this->config,
+                cache: $cache ?? new FileTokenCache()
+            ),
+                 options: $options,
+            throwOnError: $throwOnError
         );
     }
 
 
 
-/* MAKE API CALL
+/* GET
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path API endpoint path.
-     * @param string $method HTTP method for API endpoint.
-     * @param array<string, string|int|float|bool> $query Parameters in URI.
-     * @param array<string, mixed>|object $body Parameters in body.
-     * @return Response API response object.
-     * @throws GuzzleException:
+     * Send HTTP GET request.
+     *
+     * @param string $endpoint API server endpoint.
+     * @param array<string, string|int|float|bool>|object $query HTTP GET query parameters.
+     * @return Response Plume client response object.
+     * @throws ApiException API Client throws an error.
+     * @throws AuthException Error initiating authentication.
+     * @throws GuzzleException Guzzle throwing a web client error.
      */
-    public function call(
-              string $path,
-              string $method = 'GET',
-               array $query  = [],
-        array|object $body   = [],
-    ) : Response
+    public function get( string $endpoint, array|object $query = [] ) : Response
     {
-        $this->path   = $path;
-        $this->query  = $query;
-        $this->body   = $body;
-
-        $this->insert_Path_Params();
-        $this->insert_Body_Params();
-
-        return $this->http->call(
-              path: $this->path,
-            method: $method,
-             query: $this->query,
-              body: $this->body,
-        );
+        return $this->http->request( path: $endpoint, query: (array)$query );
     }
 
 
-/* GET CALL
+/* POST
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path API endpoint path.
-     * @param array<string, string> $query URI variables.
-     * @return object Response object.
-     * @throws GuzzleException
-     */
-    public function get(
-        string $path,
-         array $query = []
-    ) : object
-    {
-        $output = $this->call( path: $path, query: $query );
-
-        return $output->body;
-    }
-
-
-
-/* POST CALL
------------------------------------------------------------------------------ */
-
-    /**
-     * @param string $path API endpoint path.
-     * @param array<string, string> $query URI parameters.
-     * @param array<string, mixed>|object $body Body parameters.
-     * @return object Response object.
-     * @throws GuzzleException
+     * Send HTTP POST request.
+     *
+     * @param string $endpoint API server endpoint.
+     * @param array<string, mixed>|object $body HTTP body content.
+     * @param array<string, string|int|float|bool>|object $query HTTP GET query parameters.
+     * @param bool $formData HTTP Body in x-www-form instead of JSON.
+     * @return Response Plume client response object.
+     * @throws ApiException API Client throws an error.
+     * @throws AuthException Error initiating authentication.
+     * @throws GuzzleException Guzzle throwing a web client error.
      */
     public function post(
-              string $path,
-               array $query = [],
-        array|object $body  = [],
-    ) : object
+              string $endpoint,
+        array|object $body     = [],
+        array|object $query    = [],
+                bool $formData = false
+    ) : Response
     {
-        $output = $this->call(
-              path: $path, method: 'POST', query: $query, body: $body
+        return $this->http->request(
+                path: $endpoint,
+              method: 'POST',
+               query: (array)$query,
+                body: $body,
+            formData: $formData
         );
-
-        return $output->body;
-    }
-
-
-/* PATCH CALL
------------------------------------------------------------------------------ */
-
-    /**
-     * @param string $path URI endpoint path.
-     * @param array<string, string> $query URI parameters.
-     * @param array<string, mixed>|object $body Body parameters.
-     * @return object Response object.
-     * @throws GuzzleException
-     */
-    public function patch(
-              string $path, array $query = [], array|object $body  = []
-    ) : object
-    {
-        $output = $this->call(
-              path: $path,
-            method: 'PATCH',
-             query: $query,
-              body: $body,
-        );
-
-        return $output->body;
     }
 
 
 
-/* PUT CALL
+/* PUT
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path API endpoint path.
-     * @param array<string, string> $query URI parameters.
-     * @param array<string, mixed>|object $body Body parameters.
-     * @return object Response object.
-     * @throws GuzzleException
+     * Send HTTP PUT request.
+     *
+     * @param string $endpoint API server endpoint.
+     * @param array<string, mixed>|object $body HTTP body content.
+     * @param array<string, string|int|float|bool>|object $query HTTP GET query parameters.
+     * @param bool $formData HTTP Body in x-www-form instead of JSON.
+     * @return Response Plume client response object.
+     * @throws ApiException API Client throws an error.
+     * @throws AuthException Error initiating authentication.
+     * @throws GuzzleException Guzzle throwing a web client error.
      */
     public function put(
-              string $path, array $query = [], array|object $body  = [],
-    ) : object
+              string $endpoint,
+        array|object $body     = [],
+        array|object $query    = [],
+                bool $formData = false
+    ) : Response
     {
-        $output = $this->call(
-              path: $path,
-            method: 'PUT',
-             query: $query,
-              body: $body,
+        return $this->http->request(
+                path: $endpoint,
+              method: 'PUT',
+               query: (array)$query,
+                body: $body,
+            formData: $formData
         );
-
-        return $output->body;
     }
 
 
 
-/* DELETE CALL
+/* PATCH
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path API endpoint path.
-     * @param array<string, string> $query URI parameters.
-     * @return object Response object.
-     * @throws GuzzleException
+     * Send HTTP PATCH request.
+     *
+     * @param string $endpoint API server endpoint.
+     * @param array<string, mixed>|object $body HTTP body content.
+     * @param array<string, string|int|float|bool>|object $query HTTP GET query parameters.
+     * @param bool $formData HTTP Body in x-www-form instead of JSON.
+     * @return Response Plume client response object.
+     * @throws ApiException API Client throws an error.
+     * @throws AuthException Error initiating authentication.
+     * @throws GuzzleException Guzzle throwing a web client error.
      */
-    public function delete( string $path, array $query = [] ) : object
+    public function patch(
+              string $endpoint,
+        array|object $body     = [],
+        array|object $query    = [],
+                bool $formData = false
+    ) : Response
     {
-        $output = $this->call(
-            path: $path, method: 'DELETE', query: $query
+        return $this->http->request(
+                path: $endpoint,
+              method: 'PATCH',
+               query: (array)$query,
+                body: $body,
+            formData: $formData
         );
-
-        return $output->body;
     }
 
 
-/* HEAD CALL
+
+/* DELETE
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string $path API endpoint path.
-     * @return object Response object.
-     * @throws GuzzleException
+     * Send HTTP DELETE request.
+     *
+     * @param string $endpoint API server endpoint.
+     * @param array<string, string|int|float|bool>|object $query HTTP GET query parameters.
+     * @return Response Plume client response object.
+     * @throws ApiException API Client throws an error.
+     * @throws AuthException Error initiating authentication.
+     * @throws GuzzleException Guzzle throwing a web client error.
      */
-    public function head( string $path ) : object
+    public function delete( string $endpoint, array|object $query = [] ) : Response
     {
-        $output = $this->call( path: $path, method: 'HEAD' );
-
-        return $output->body;
+        return $this->http->request(
+            path: $endpoint, method: 'DELETE', query: (array)$query
+        );
     }
 
 
 
-/* INSERT PATH PARAMETERS
+/* HEAD
 ----------------------------------------------------------------------------- */
 
     /**
-     * Replace parameters in URI with variables.
-     * @return void
+     * Send HTTP HEAD request.
+     *
+     * @param string $endpoint API server endpoint.
+     * @param array<string, string|int|float|bool>|object $query HTTP GET query parameters.
+     * @return Response Plume client response object.
+     * @throws ApiException API Client throws an error.
+     * @throws AuthException Error initiating authentication.
+     * @throws GuzzleException Guzzle throwing a web client error.
      */
-    private function insert_Path_Params() : void
+    public function head( string $endpoint, array|object $query = [] ) : Response
     {
-        if( !str_contains( haystack: $this->path, needle: '{' )) {
-            return;
-        }
-
-        $this->path = str_replace(
-             search: '{groupId}',
-            replace: $this->group_id,
-            subject: $this->path
+        return $this->http->request(
+            path: $endpoint, method: 'HEAD', query: (array)$query
         );
-        $this->path = str_replace(
-             search: '{partnerId}',
-            replace: $this->partner_id,
-            subject: $this->path
-        );
-
-        if( $this->query ) {
-            foreach ($this->query as $key => $value) {
-                if (str_contains(haystack: $this->path, needle: '{' . $key . '}')) {
-                    $this->path = str_replace(
-                         search: '{' . $key . '}',
-                        replace: $value,
-                        subject: $this->path
-                    );
-                    unset($this->query[$key]);
-                }
-            }
-        }
     }
 
 
-/* INSERT BODY PARAMETERS
+
+/* REQUEST
 ----------------------------------------------------------------------------- */
 
     /**
-     * Replace body parameters with variables.
-     * @return void
+     * Make a generic API request.
+     *
+     * @param string $endpoint API server endpoint.
+     * @param string $method HTTP method.
+     * @param array<string, string|int|float|bool>|object $query HTTP GET query parameters.
+     * @param array<string, mixed>|object $body HTTP body content.
+     * @param bool $formData HTTP Body in x-www-form instead of JSON.
+     * @return Response Plume client response object.
+     * @throws ApiException API Client throws an error.
+     * @throws AuthException Error initiating authentication.
+     * @throws GuzzleException Guzzle throwing a web client error.
      */
-    private function insert_Body_Params() : void
+    public function request(
+              string $endpoint,
+              string $method   = 'GET',
+        array|object $query    = [],
+        array|object $body     = [],
+                bool $formData = false
+    ) : Response
     {
-        if( is_array( $this->body )) {
-            if( array_key_exists( key: 'partnerId', array: $this->body ) ) {
-                $this->body['partnerId'] = $_ENV['PLUME_PARTNER_ID'];
-            }
-
-            if( array_key_exists( key: 'groupId', array: $this->body ) ) {
-                $this->body['groupId'] = $_ENV['PLUME_GROUP_ID'];
-            }
-
-            return;
-        }
-
-        if( property_exists(
-            object_or_class: $this->body, property: 'partnerId'
-        )) {
-            $this->body->partnerId = $_ENV['PLUME_PARTNER_ID'];
-        }
-
-        if( property_exists(
-            object_or_class: $this->body, property: 'groupId'
-        )) {
-            $this->body->groupId = $_ENV['PLUME_GROUP_ID'];
-        }
+        return $this->http->request(
+                path: $endpoint,
+              method: $method,
+               query: (array)$query,
+                body: $body,
+            formData: $formData
+        );
     }
 }
