@@ -15,7 +15,7 @@
         "opensync"
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "psr/http-message": "^1.0|^2.0",
         "guzzlehttp/guzzle": "^7.10",
         "ocolin/global-type": "^2.0"

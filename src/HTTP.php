@@ -87,7 +87,7 @@ class HTTP
     ) : Response
     {
         $method = strtoupper( string: $method );
-        if( !in_array( $method, self::VALID_METHODS, strict: true )) {
+        if( !in_array( needle: $method, haystack: self::VALID_METHODS, strict: true )) {
             throw new ApiException(
                 message:    "Invalid HTTP method: {$method}",
                 statusCode: 0,
