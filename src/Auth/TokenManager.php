@@ -39,6 +39,11 @@ class TokenManager
 /* CONSTRUCTOR
 ----------------------------------------------------------------------------- */
 
+    /**
+     * @param Config $config Configuration data object.
+     * @param TokenCacheInterface $cache Token cache.
+     * @param ?GuzzleClient $http Guzzle client for mocking.
+     */
     public function __construct(
         readonly private Config $config,
         readonly private TokenCacheInterface $cache,
@@ -54,8 +59,8 @@ class TokenManager
 
     /**
      * @return string Authentication token.
-     * @throws AuthException
-     * @throws GuzzleException
+     * @throws AuthException Error authenticating.
+     * @throws GuzzleException HTTP related error.
      */
     public function getToken(): string
     {
@@ -72,13 +77,13 @@ class TokenManager
 
 
 
-/*
+/* FETCH TOKEN
 ----------------------------------------------------------------------------- */
 
     /**
      * @return string Auth bearer string.
-     * @throws AuthException
-     * @throws GuzzleException
+     * @throws AuthException Error authenticating.
+     * @throws GuzzleException HTTP related error.
      */
     private function fetchToken() : string
     {

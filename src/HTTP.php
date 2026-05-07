@@ -74,9 +74,9 @@ class HTTP
      * @param array<string, mixed>|object $body HTTP body.
      * @param bool $formData Use formData in HTTP body.
      * @return Response Plume client response object.
-     * @throws ApiException
-     * @throws Exception\AuthException
-     * @throws GuzzleException
+     * @throws ApiException Error in API.
+     * @throws Exception\AuthException Error authenticating.
+     * @throws GuzzleException HTTP transport error.
      */
     public function request(
               string $path,

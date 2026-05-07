@@ -39,12 +39,12 @@ readonly class Config
 ----------------------------------------------------------------------------- */
 
     /**
-     * @param string|null $api_url
-     * @param string|null $auth_url
-     * @param string|null $auth_hash
-     * @param string|null $partner_id
-     * @param string|null $group_id
-     * @throws ConfigException
+     * @param ?string $api_url URL to API server.
+     * @param ?string $auth_url URL to Authentication server.
+     * @param ?string $auth_hash Authentication hash.
+     * @param ?string $partner_id Partner ID.
+     * @param ?string $group_id Group ID.
+     * @throws ConfigException Error configurint settings.
      */
     public function __construct(
         ?string $api_url    = null,
@@ -95,7 +95,7 @@ readonly class Config
      * @param string $envKey Name of Environment variable.
      * @param string $errorMessage Error message if missing.
      * @return string Variable value.
-     * @throws ConfigException
+     * @throws ConfigException Error configuring settings.
      */
     private static function resolve(
         ?string $value,

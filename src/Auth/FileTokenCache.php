@@ -8,11 +8,19 @@ use Ocolin\Plume\Exception\CacheException;
 
 class FileTokenCache implements TokenCacheInterface
 {
+    /**
+     * @var string Path to token.
+     */
     private string $path;
 
-    public function __construct(
-        string $path = '',
-    )
+/* CONSTRUCTOR
+----------------------------------------------------------------------------- */
+
+    /**
+     * @param string $path Path to token file.
+     * @throws CacheException Error caching token.
+     */
+    public function __construct( string $path = '' )
     {
         $this->path = $path !== ''
             ? $path
@@ -28,6 +36,11 @@ class FileTokenCache implements TokenCacheInterface
             );
         }
     }
+
+
+
+/* GET TOKEN
+----------------------------------------------------------------------------- */
 
     /**
      * @return ?string Return file content or null.
@@ -45,7 +58,7 @@ class FileTokenCache implements TokenCacheInterface
     /**
      * @param string $token Authentication token to store.
      * @return void
-     * @throws CacheException
+     * @throws CacheException Error setting token.
      */
     public function set( string $token ): void
     {
@@ -67,11 +80,14 @@ class FileTokenCache implements TokenCacheInterface
     }
 
 
+/* CLEAR TOKENS
+----------------------------------------------------------------------------- */
+
     /**
      * Remove the cache file.
      *
      * @return void
-     * @throws CacheException
+     * @throws CacheException Error clearing token cache.
      */
     public function clear(): void
     {
